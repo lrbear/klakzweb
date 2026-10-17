@@ -1,4 +1,3 @@
-\
 "use strict";
 
 const STORAGE = {
@@ -129,6 +128,7 @@ $$(".modal-backdrop").forEach(backdrop => backdrop.addEventListener("click", eve
   if (event.target === backdrop) closeModal(backdrop.id);
 }));
 $("#loginOpen").addEventListener("click", openAuth);
+$("#adminOpen").addEventListener("click", () => { renderAdmin(); openModal("adminModal"); });
 ["uploadOpen","heroUpload","bannerUpload"].forEach(id => $("#" + id).addEventListener("click", () => {
   $("#uploadMessage").textContent = "";
   openModal("uploadModal");

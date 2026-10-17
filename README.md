@@ -1,4 +1,3 @@
-\
 # KLAKZWEB
 
 KLAKZWEB, HTML + CSS + JavaScript ile hazırlanmış oyun kaynakları/topluluk arşivi başlangıç projesidir. Next.js, TypeScript, Tailwind CSS veya npm bağımlılığı kullanmaz.
