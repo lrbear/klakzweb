@@ -1,6 +1,6 @@
-/* Optional Supabase connection settings. Leave empty for local demo mode.
-   Never put a service_role key in frontend code. Use only the public anon/publishable key. */
-window.KLAKZWEB_CONFIG = {
-  supabaseUrl: "",
-  supabaseAnonKey: ""
+/* Supabase public project settings. Replace both values with your own project values.
+   NEVER put a service_role key or any secret key in this file. */
+window.KLAKZ_CONFIG = {
+  supabaseUrl: "https://YOUR-PROJECT.supabase.co",
+  supabaseAnonKey: "YOUR_SUPABASE_PUBLISHABLE_OR_ANON_KEY"
 };
