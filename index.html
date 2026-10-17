@@ -8,6 +8,7 @@
   <title>KLAKZWEB — Oyun Arşivi</title>
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="styles.css">
+  <script src="supabase-config.js" defer></script>
   <script src="app.js" defer></script>
 </head>
 <body>
@@ -21,9 +22,12 @@
       <a class="nav-link active" href="#library">Keşfet</a>
       <a class="nav-link" href="#categories">Kategoriler</a>
       <a class="nav-link" href="#about">Hakkında</a>
+      <a class="nav-link" href="#library" id="favoritesNav">♡ Favoriler</a>
     </nav>
     <div class="top-actions">
       <button class="icon-button" id="themeToggle" aria-label="Temayı değiştir" title="Temayı değiştir">☼</button>
+      <button class="icon-button" id="notificationsOpen" aria-label="Bildirimler" title="Bildirimler">♢<span id="notificationDot" class="notification-dot hidden"></span></button>
+      <button class="icon-button" id="profileOpen" aria-label="Profilim" title="Profilim">◎</button>
       <button class="icon-button" id="adminOpen" aria-label="Yönetim panelini aç" title="Yönetim paneli">⚙</button>
       <button class="button button-ghost" id="loginOpen">Giriş yap</button>
       <button class="button button-primary" id="uploadOpen"><span>＋</span> Paylaş</button>
@@ -63,6 +67,7 @@
       <div class="toolbar">
         <label class="search-box"><span class="search-icon">⌕</span><input id="searchInput" type="search" placeholder="İçerik, oyun veya etiket ara..." autocomplete="off"><kbd>⌘ K</kbd></label>
         <div class="filter-row" id="categories">
+          <button class="filter-chip" data-category="Favoriler">♡ Favoriler</button>
           <button class="filter-chip selected" data-category="Tümü">Tümü <span>06</span></button>
           <button class="filter-chip" data-category="Mod">Modlar</button>
           <button class="filter-chip" data-category="Araç">Araçlar</button>
@@ -85,23 +90,24 @@
   <div class="modal-backdrop hidden" id="loginModal" role="dialog" aria-modal="true" aria-labelledby="loginTitle">
     <div class="modal">
       <button class="modal-close" data-close="loginModal" aria-label="Kapat">×</button>
-      <div class="modal-logo">KW</div><div class="eyebrow">KLAKZWEB HESABI</div><h2 id="loginTitle">Tekrar hoş geldin.</h2><p class="modal-subtitle">Bu prototipte hesap bilgileri yalnızca bu tarayıcıda saklanır.</p>
+      <div class="modal-logo">KW</div><div class="eyebrow">KLAKZWEB HESABI</div><h2 id="loginTitle">Tekrar hoş geldin.</h2><p class="modal-subtitle">Yerel demo hesabı oluşturabilir veya Supabase bağlantısını yapılandırabilirsin.</p>
       <div class="tab-row"><button class="tab active" data-auth-tab="login">Giriş yap</button><button class="tab" data-auth-tab="register">Hesap oluştur</button></div>
       <form id="authForm"><label>E-posta<input type="email" id="authEmail" required placeholder="ornek@mail.com" autocomplete="email"></label><label>Şifre<input type="password" id="authPassword" required minlength="6" placeholder="En az 6 karakter" autocomplete="current-password"></label><button class="button button-primary full-width" type="submit" id="authSubmit">Giriş yap <span>↗</span></button></form>
       <p class="form-message" id="authMessage" role="status"></p>
-      <p class="security-note">Demo notu: Bu giriş sistemi gerçek kimlik doğrulama değildir. Yayına almadan önce güvenli bir sunucu veya Supabase Auth gibi bir servis bağlanmalıdır.</p>
+      <p class="security-note">Güvenlik: demo modunda hesaplar bu tarayıcıya özeldir. Gerçek hesaplar için Supabase Auth ve veritabanı yapılandırması gerekir.</p>
     </div>
   </div>
 
   <div class="modal-backdrop hidden" id="uploadModal" role="dialog" aria-modal="true" aria-labelledby="uploadTitle">
     <div class="modal modal-wide">
       <button class="modal-close" data-close="uploadModal" aria-label="Kapat">×</button>
-      <div class="eyebrow">TOPLULUĞA KATKI</div><h2 id="uploadTitle">Bir keşif paylaş.</h2><p class="modal-subtitle">İçerik bilgilerini ekle. Bu demo, kayıtları bu tarayıcıda tutar.</p>
+      <div class="eyebrow">TOPLULUĞA KATKI</div><h2 id="uploadTitle">Bir keşif paylaş.</h2><p class="modal-subtitle">İçeriğini toplulukla paylaş. Kod içeriği ekleyebilir, bağlantı veya açıklama bırakabilirsin.</p>
       <form id="uploadForm" class="upload-form">
         <label>İçerik adı<input id="resourceTitle" required maxlength="70" placeholder="Örn. Başlangıç rehberi"></label>
         <div class="form-two"><label>Oyun / konu<input id="resourceGame" required maxlength="40" placeholder="Örn. Minecraft"></label><label>Kategori<select id="resourceCategory"><option>Mod</option><option>Araç</option><option>Rehber</option></select></label></div>
         <label>Kısa açıklama<textarea id="resourceDescription" required maxlength="220" rows="3" placeholder="Bu içerik ne işe yarıyor?"></textarea></label>
         <label>Bağlantı (isteğe bağlı)<input id="resourceLink" type="url" placeholder="https://..."></label>
+        <label>Kod (isteğe bağlı)<textarea id="resourceCode" rows="5" maxlength="20000" placeholder="Kodunu buraya ekle..."></textarea></label>
         <button class="button button-primary full-width" type="submit">İçeriği ekle <span>↗</span></button>
       </form>
       <p class="form-message" id="uploadMessage" role="status"></p>
@@ -112,10 +118,14 @@
     <div class="modal modal-wide">
       <button class="modal-close" data-close="adminModal" aria-label="Kapat">×</button>
       <div class="eyebrow">YÖNETİM</div><h2 id="adminTitle">Yönetim paneli</h2><p class="modal-subtitle">Demo yönetim paneli: yerel içerikleri kaldırabilirsin.</p>
-      <div id="adminContent"></div>
+      <div class="stats-grid" id="adminStats"></div><div id="adminContent"></div>
       <p class="security-note">Bu panel sadece prototip amaçlıdır. İstemci tarafındaki yönetim yetkileri güvenli değildir; gerçek projede sunucu tarafı rol kontrolü gerekir.</p>
     </div>
   </div>
+
+  <div class="modal-backdrop hidden" id="profileModal" role="dialog" aria-modal="true" aria-labelledby="profileTitle"><div class="modal modal-wide"><button class="modal-close" data-close="profileModal" aria-label="Kapat">×</button><div class="eyebrow">OYUNCU KARTI</div><h2 id="profileTitle">Profilim</h2><div id="profileContent"></div><form id="profileForm"><label>Kullanıcı adı<input id="profileName" maxlength="24" placeholder="Oyuncu adın"></label><label>Hakkında<textarea id="profileBio" rows="3" maxlength="180" placeholder="Kendinden kısaca bahset..."></textarea></label><button class="button button-primary full-width" type="submit">Profili kaydet</button></form><p class="form-message" id="profileMessage"></p></div></div>
+  <div class="modal-backdrop hidden" id="detailModal" role="dialog" aria-modal="true" aria-labelledby="detailTitle"><div class="modal modal-wide"><button class="modal-close" data-close="detailModal" aria-label="Kapat">×</button><div class="eyebrow">İÇERİK DETAYI</div><div id="detailContent"></div></div></div>
+  <div class="modal-backdrop hidden" id="notificationsModal" role="dialog" aria-modal="true" aria-labelledby="notificationsTitle"><div class="modal"><button class="modal-close" data-close="notificationsModal" aria-label="Kapat">×</button><div class="eyebrow">TOPLULUK</div><h2 id="notificationsTitle">Bildirimler</h2><div id="notificationsContent"></div><button class="button button-ghost full-width" id="markNotificationsRead">Okundu olarak işaretle</button></div></div>
   <div class="toast" id="toast" role="status"></div>
 </body>
 </html>

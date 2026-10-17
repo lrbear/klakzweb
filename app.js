@@ -1,246 +1,55 @@
 "use strict";
-
-const STORAGE = {
-  resources: "klakzweb.resources.v1",
-  users: "klakzweb.users.v1",
-  session: "klakzweb.session.v1",
-  theme: "klakzweb.theme.v1"
-};
-
-const starterResources = [
-  {id:"starter-1",title:"Minecraft Performans Rehberi",game:"Minecraft",category:"Rehber",description:"Daha akıcı bir oyun deneyimi için temel ayarlar, performans ipuçları ve kontrol listesi.",symbol:"M",color:"#9df5c3",author:"KLAKZWEB",link:"",created:Date.now()-60000},
-  {id:"starter-2",title:"Arayüz Mod Koleksiyonu",game:"Minecraft",category:"Mod",description:"Oyun arayüzünü kişiselleştirmek isteyenler için topluluk seçkisi ve kurulum notları.",symbol:"✦",color:"#b6a0ff",author:"KLAKZWEB",link:"",created:Date.now()-120000},
-  {id:"starter-3",title:"Oyun Dosyaları Düzenleyici",game:"Genel",category:"Araç",description:"Klasörlerini daha düzenli tutmak için örnek iş akışı ve pratik dosya yönetimi önerileri.",symbol:"⌘",color:"#8bd7ff",author:"KLAKZWEB",link:"",created:Date.now()-180000},
-  {id:"starter-4",title:"Yeni Başlayanlar İçin Roblox",game:"Roblox",category:"Rehber",description:"Proje kurulumuna, güvenli kaynak seçimine ve temel oyun geliştirme kavramlarına giriş.",symbol:"R",color:"#ffb78a",author:"KLAKZWEB",link:"",created:Date.now()-240000},
-  {id:"starter-5",title:"Minimal HUD Tasarımları",game:"Çoklu oyun",category:"Mod",description:"Daha sade bir görünüm için ilham veren HUD fikirleri ve arayüz tasarım notları.",symbol:"◈",color:"#f5a8d2",author:"KLAKZWEB",link:"",created:Date.now()-300000},
-  {id:"starter-6",title:"Kısayol ve Kontrol İpuçları",game:"PC",category:"Araç",description:"Günlük kullanımda işini kolaylaştırabilecek genel kısayollar ve küçük yardımcılar.",symbol:"⌁",color:"#f1d27c",author:"KLAKZWEB",link:"",created:Date.now()-360000}
+const STORAGE={resources:"klakzweb.resources.v2",users:"klakzweb.users.v2",session:"klakzweb.session.v2",theme:"klakzweb.theme.v1",favorites:"klakzweb.favorites.v1",reviews:"klakzweb.reviews.v1",profiles:"klakzweb.profiles.v1",notifications:"klakzweb.notifications.v1",views:"klakzweb.views.v1"};
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const safeParse=(v,f)=>{try{return JSON.parse(v)??f}catch{return f}};
+const starterResources=[
+{id:"starter-1",title:"Minecraft Performans Rehberi",game:"Minecraft",category:"Rehber",description:"Daha akıcı bir oyun deneyimi için temel ayarlar, performans ipuçları ve kontrol listesi.",symbol:"M",color:"#9df5c3",author:"KLAKZWEB",link:"",code:"// Performans kontrol listesi\n// 1. Grafik ayarlarını ihtiyacına göre düzenle\n// 2. Arka plan uygulamalarını kapat\n// 3. Ekran kartı sürücülerini güncel tut",created:Date.now()-60000,views:18},
+{id:"starter-2",title:"Arayüz Mod Koleksiyonu",game:"Minecraft",category:"Mod",description:"Oyun arayüzünü kişiselleştirmek isteyenler için topluluk seçkisi ve kurulum notları.",symbol:"✦",color:"#b6a0ff",author:"KLAKZWEB",link:"",code:"// Mod listeni ve kurulum notlarını burada tutabilirsin.",created:Date.now()-120000,views:32},
+{id:"starter-3",title:"Oyun Dosyaları Düzenleyici",game:"Genel",category:"Araç",description:"Klasörlerini daha düzenli tutmak için örnek iş akışı ve pratik dosya yönetimi önerileri.",symbol:"⌘",color:"#8bd7ff",author:"KLAKZWEB",link:"",code:"// Önce dosyalarının yedeğini al.\n// Sonra klasörleri oyun ve sürüme göre düzenle.",created:Date.now()-180000,views:12},
+{id:"starter-4",title:"Yeni Başlayanlar İçin Roblox",game:"Roblox",category:"Rehber",description:"Proje kurulumuna, güvenli kaynak seçimine ve temel oyun geliştirme kavramlarına giriş.",symbol:"R",color:"#ffb78a",author:"KLAKZWEB",link:"",code:"-- Roblox Studio için örnek Lua\nprint(\"Merhaba KLAKZWEB!\")",created:Date.now()-240000,views:25},
+{id:"starter-5",title:"Minimal HUD Tasarımları",game:"Çoklu oyun",category:"Mod",description:"Daha sade bir görünüm için ilham veren HUD fikirleri ve arayüz tasarım notları.",symbol:"◈",color:"#f5a8d2",author:"KLAKZWEB",link:"",code:"// HUD tasarım notları\n// Kontrastı, okunabilirliği ve erişilebilirliği kontrol et.",created:Date.now()-300000,views:9},
+{id:"starter-6",title:"Güvenli Mod Kurulum Kontrolü",game:"Genel",category:"Rehber",description:"Dosyaları çalıştırmadan önce kaynak, izinler ve yedekler için kısa bir güvenlik kontrol listesi.",symbol:"✓",color:"#f5d78b",author:"KLAKZWEB",link:"",code:"// Kaynağı kontrol et\n// İzinleri oku\n// Önemli dosyaları yedekle",created:Date.now()-360000,views:41}
 ];
-
-const $ = (selector, root=document) => root.querySelector(selector);
-const $$ = (selector, root=document) => [...root.querySelectorAll(selector)];
-const safeParse = (value, fallback) => { try { return JSON.parse(value) ?? fallback; } catch { return fallback; } };
-
-let resources = safeParse(localStorage.getItem(STORAGE.resources), null);
-if (!Array.isArray(resources)) {
-  resources = starterResources;
-  localStorage.setItem(STORAGE.resources, JSON.stringify(resources));
-}
-let activeCategory = "Tümü";
-let authMode = "login";
-let toastTimer;
-
-const resourceGrid = $("#resourceGrid");
-const searchInput = $("#searchInput");
-
-function escapeHTML(value="") {
-  return String(value).replace(/[&<>"']/g, char => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[char]));
-}
-function getSession() { return safeParse(localStorage.getItem(STORAGE.session), null); }
-function saveResources() {
-  localStorage.setItem(STORAGE.resources, JSON.stringify(resources));
-  renderResources();
-}
-function toast(message) {
-  const el = $("#toast");
-  el.textContent = message;
-  el.classList.add("show");
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => el.classList.remove("show"), 2600);
-}
-function updateAccountButton() {
-  const session = getSession();
-  $("#loginOpen").textContent = session ? "Hesabım" : "Giriş yap";
-  $("#uploadOpen").innerHTML = "<span>＋</span> Paylaş";
-  $("#statResources").textContent = String(resources.length).padStart(2, "0");
-}
-function renderResources() {
-  const query = searchInput.value.trim().toLocaleLowerCase("tr-TR");
-  const visible = resources.filter(item => {
-    const matchesCategory = activeCategory === "Tümü" || item.category === activeCategory;
-    const haystack = `${item.title} ${item.game} ${item.category} ${item.description} ${item.author}`.toLocaleLowerCase("tr-TR");
-    return matchesCategory && haystack.includes(query);
-  });
-  resourceGrid.innerHTML = visible.map((item, index) => `
-    <article class="resource-card">
-      <div class="resource-cover" style="--cover:${escapeHTML(item.color || "#b8a3ff")}">
-        <span class="cover-badge">${escapeHTML(item.category.toLocaleUpperCase("tr-TR"))}</span>
-        <span class="cover-symbol">${escapeHTML(item.symbol || "✦")}</span>
-        <span class="cover-index">KW / ${String(index+1).padStart(2,"0")}</span>
-      </div>
-      <div class="resource-content">
-        <div class="resource-meta"><span class="category">${escapeHTML(item.category)}</span><span>${escapeHTML(item.author || "Topluluk")}</span></div>
-        <h3>${escapeHTML(item.title)}</h3>
-        <p>${escapeHTML(item.description)}</p>
-        <div class="resource-footer"><span class="game-tag">◉ ${escapeHTML(item.game)}</span>
-          ${item.link ? `<a class="resource-open" href="${escapeHTML(item.link)}" target="_blank" rel="noopener noreferrer">İçeriği aç ↗</a>` : `<button class="resource-open" data-details="${escapeHTML(item.id)}">Detaylar ↗</button>`}
-        </div>
-      </div>
-    </article>`).join("");
-  $("#emptyState").classList.toggle("hidden", visible.length > 0);
-  resourceGrid.classList.toggle("hidden", visible.length === 0);
-  $("#resultCount").textContent = `${visible.length} içerik`;
-  $("#resultsLabel").textContent = activeCategory === "Tümü" ? "Tüm içerikler" : `${activeCategory} kategorisi`;
-  $$(".filter-chip").forEach(button => button.classList.toggle("selected", button.dataset.category === activeCategory));
-  $("#statResources").textContent = String(resources.length).padStart(2, "0");
-}
-function openModal(id) {
-  $("#" + id).classList.remove("hidden");
-  document.body.style.overflow = "hidden";
-}
-function closeModal(id) {
-  $("#" + id).classList.add("hidden");
-  if ($$(".modal-backdrop:not(.hidden)").length === 0) document.body.style.overflow = "";
-}
-function setAuthMode(mode) {
-  authMode = mode;
-  $$(".tab").forEach(tab => tab.classList.toggle("active", tab.dataset.authTab === mode));
-  $("#authSubmit").innerHTML = mode === "login" ? 'Giriş yap <span>↗</span>' : 'Hesap oluştur <span>↗</span>';
-  $("#authPassword").autocomplete = mode === "login" ? "current-password" : "new-password";
-  $("#authMessage").textContent = "";
-}
-function openAuth() {
-  $("#authMessage").textContent = "";
-  setAuthMode("login");
-  const session = getSession();
-  if (session) {
-    if (confirm(`${session.email} hesabından çıkış yapmak istiyor musun?`)) {
-      localStorage.removeItem(STORAGE.session);
-      updateAccountButton();
-      toast("Oturum kapatıldı.");
-    }
-    return;
-  }
-  openModal("loginModal");
-}
-function renderAdmin() {
-  const host = $("#adminContent");
-  if (!resources.length) {
-    host.innerHTML = "<p class='modal-subtitle'>Henüz içerik yok.</p>";
-    return;
-  }
-  host.innerHTML = resources.map(item => `
-    <div class="admin-row"><div><strong>${escapeHTML(item.title)}</strong><small>${escapeHTML(item.game)} · ${escapeHTML(item.category)} · ${escapeHTML(item.author || "Topluluk")}</small></div><button class="delete-button" data-delete="${escapeHTML(item.id)}">Kaldır</button></div>
-  `).join("");
-}
-
-$$("[data-close]").forEach(button => button.addEventListener("click", () => closeModal(button.dataset.close)));
-$$(".modal-backdrop").forEach(backdrop => backdrop.addEventListener("click", event => {
-  if (event.target === backdrop) closeModal(backdrop.id);
-}));
-$("#loginOpen").addEventListener("click", openAuth);
-$("#adminOpen").addEventListener("click", () => { renderAdmin(); openModal("adminModal"); });
-["uploadOpen","heroUpload","bannerUpload"].forEach(id => $("#" + id).addEventListener("click", () => {
-  $("#uploadMessage").textContent = "";
-  openModal("uploadModal");
-}));
-$("#themeToggle").addEventListener("click", () => {
-  document.body.classList.toggle("light");
-  localStorage.setItem(STORAGE.theme, document.body.classList.contains("light") ? "light" : "dark");
-});
-if (localStorage.getItem(STORAGE.theme) === "light") document.body.classList.add("light");
-searchInput.addEventListener("input", renderResources);
-$$(".filter-chip").forEach(button => button.addEventListener("click", () => {
-  activeCategory = button.dataset.category;
-  renderResources();
-}));
-$("#resetFilters").addEventListener("click", () => {
-  searchInput.value = "";
-  activeCategory = "Tümü";
-  renderResources();
-});
-$("#mobileMenu").addEventListener("click", () => {
-  const nav = $(".desktop-nav");
-  const open = nav.style.display === "flex";
-  nav.style.display = open ? "" : "flex";
-  if (!open) {
-    nav.style.position = "absolute";
-    nav.style.top = "69px";
-    nav.style.left = "0";
-    nav.style.right = "0";
-    nav.style.padding = "20px";
-    nav.style.background = "var(--panel)";
-    nav.style.borderBottom = "1px solid var(--line)";
-    nav.style.justifyContent = "center";
-  }
-});
-$$("[data-auth-tab]").forEach(tab => tab.addEventListener("click", () => setAuthMode(tab.dataset.authTab)));
-$("#authForm").addEventListener("submit", event => {
-  event.preventDefault();
-  const email = $("#authEmail").value.trim().toLowerCase();
-  const password = $("#authPassword").value;
-  const users = safeParse(localStorage.getItem(STORAGE.users), []);
-  const message = $("#authMessage");
-  if (authMode === "register") {
-    if (users.some(user => user.email === email)) {
-      message.textContent = "Bu e-posta zaten kayıtlı.";
-      return;
-    }
-    users.push({email, password});
-    localStorage.setItem(STORAGE.users, JSON.stringify(users));
-    localStorage.setItem(STORAGE.session, JSON.stringify({email}));
-    message.textContent = "Demo hesabın oluşturuldu.";
-  } else {
-    const user = users.find(entry => entry.email === email && entry.password === password);
-    if (!user) {
-      message.textContent = "E-posta veya şifre yanlış. Önce hesap oluşturmayı deneyebilirsin.";
-      return;
-    }
-    localStorage.setItem(STORAGE.session, JSON.stringify({email}));
-    message.textContent = "Giriş başarılı.";
-  }
-  updateAccountButton();
-  setTimeout(() => closeModal("loginModal"), 650);
-});
-$("#uploadForm").addEventListener("submit", event => {
-  event.preventDefault();
-  const session = getSession();
-  const item = {
-    id: `user-${Date.now()}`,
-    title: $("#resourceTitle").value.trim(),
-    game: $("#resourceGame").value.trim(),
-    category: $("#resourceCategory").value,
-    description: $("#resourceDescription").value.trim(),
-    link: $("#resourceLink").value.trim(),
-    author: session?.email || "Misafir",
-    symbol: $("#resourceCategory").value === "Mod" ? "✦" : $("#resourceCategory").value === "Araç" ? "⌘" : "↗",
-    color: ["#b6a0ff","#8bd7ff","#9df5c3","#f5a8d2"][Math.floor(Math.random()*4)],
-    created: Date.now()
-  };
-  resources.unshift(item);
-  saveResources();
-  $("#uploadForm").reset();
-  $("#uploadMessage").textContent = "İçerik bu tarayıcıya eklendi.";
-  toast("İçerik eklendi!");
-  setTimeout(() => closeModal("uploadModal"), 700);
-});
-resourceGrid.addEventListener("click", event => {
-  const button = event.target.closest("[data-details]");
-  if (!button) return;
-  const item = resources.find(entry => entry.id === button.dataset.details);
-  if (item) alert(`${item.title}\n\n${item.description}\n\nOyun: ${item.game}\nKategori: ${item.category}\nPaylaşan: ${item.author || "Topluluk"}${item.link ? "\nBağlantı: " + item.link : ""}`);
-});
-$("#adminContent").addEventListener("click", event => {
-  const button = event.target.closest("[data-delete]");
-  if (!button) return;
-  const item = resources.find(entry => entry.id === button.dataset.delete);
-  if (!item || !confirm(`"${item.title}" içeriği kaldırılsın mı?`)) return;
-  resources = resources.filter(entry => entry.id !== button.dataset.delete);
-  saveResources();
-  renderAdmin();
-  toast("İçerik kaldırıldı.");
-});
-document.addEventListener("keydown", event => {
-  if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
-    event.preventDefault();
-    searchInput.focus();
-  }
-  if (event.key === "Escape") $$(".modal-backdrop:not(.hidden)").forEach(modal => closeModal(modal.id));
-  if (event.key === "F2") {
-    event.preventDefault();
-    renderAdmin();
-    openModal("adminModal");
-  }
-});
-$("#year").textContent = new Date().getFullYear();
-updateAccountButton();
-renderResources();
+let resources=safeParse(localStorage.getItem(STORAGE.resources),null);if(!Array.isArray(resources)){resources=starterResources;localStorage.setItem(STORAGE.resources,JSON.stringify(resources));}
+let activeCategory="Tümü",authMode="login",toastTimer,showFavorites=false;
+function getList(key,fallback=[]){return safeParse(localStorage.getItem(key),fallback)}
+function putList(key,val){localStorage.setItem(key,JSON.stringify(val))}
+function getSession(){return safeParse(localStorage.getItem(STORAGE.session),null)}
+function escapeHTML(v=""){return String(v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function currentEmail(){return getSession()?.email||null}
+function userLabel(){const email=currentEmail();if(!email)return "Misafir";const profiles=getList(STORAGE.profiles,{});return profiles[email]?.name||email.split("@")[0]}
+function toast(message){const el=$("#toast");el.textContent=message;el.classList.add("show");clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove("show"),2600)}
+function addNotification(title,body){const list=getList(STORAGE.notifications,[]);list.unshift({id:Date.now()+Math.random(),title,body,created:Date.now(),read:false});putList(STORAGE.notifications,list.slice(0,40));updateNotificationDot()}
+function updateNotificationDot(){const unread=getList(STORAGE.notifications,[]).filter(n=>!n.read).length;$("#notificationDot").classList.toggle("hidden",!unread);$("#notificationDot").textContent=unread>9?"9+":String(unread)}
+function getReviews(){return getList(STORAGE.reviews,{})}
+function ratingFor(id){const reviews=getReviews()[id]||[];return reviews.length?reviews.reduce((n,r)=>n+r.rating,0)/reviews.length:0}
+function renderResources(){const query=$("#searchInput").value.trim().toLocaleLowerCase("tr-TR"),favorites=getList(STORAGE.favorites,{}),email=currentEmail();let visible=resources.filter(item=>{const matchCat=activeCategory==="Tümü"||activeCategory==="Favoriler"||item.category===activeCategory;const hay=`${item.title} ${item.game} ${item.category} ${item.description} ${item.author}`.toLocaleLowerCase("tr-TR");return matchCat&&hay.includes(query)&&(activeCategory!=="Favoriler"||!!(email&&favorites[email]?.includes(item.id)));});
+visible.sort((a,b)=>(b.created||0)-(a.created||0));$("#resourceGrid").innerHTML=visible.map((item,index)=>{const avg=ratingFor(item.id),count=(getReviews()[item.id]||[]).length,isFav=!!(email&&favorites[email]?.includes(item.id));return `<article class="resource-card reveal"><div class="resource-cover" style="--cover:${escapeHTML(item.color||"#b8a3ff")}"><span class="cover-badge">${escapeHTML(item.category.toLocaleUpperCase("tr-TR"))}</span><span class="cover-symbol">${escapeHTML(item.symbol||"✦")}</span><span class="cover-index">KW / ${String(index+1).padStart(2,"0")}</span><button class="favorite-button ${isFav?"is-favorite":""}" data-favorite="${escapeHTML(item.id)}" aria-label="Favori">${isFav?"♥":"♡"}</button></div><div class="resource-content"><div class="resource-meta"><span class="category">${escapeHTML(item.category)}</span><button class="author-link" data-profile="${escapeHTML(item.author||"KLAKZWEB")}">${escapeHTML(item.author||"Topluluk")}</button></div><h3>${escapeHTML(item.title)}</h3><p>${escapeHTML(item.description)}</p><div class="resource-rating"><span>★ ${avg?avg.toFixed(1):"Yeni"}</span><span>${count} değerlendirme</span><span>◉ ${Number(item.views||0)} görüntülenme</span></div><div class="resource-footer"><span class="game-tag">◉ ${escapeHTML(item.game)}</span><button class="resource-open" data-details="${escapeHTML(item.id)}">Detaylar ↗</button></div></div></article>`}).join("");
+$("#emptyState").classList.toggle("hidden",visible.length>0);$("#resourceGrid").classList.toggle("hidden",visible.length===0);$("#resultCount").textContent=`${visible.length} içerik`;$("#resultsLabel").textContent=activeCategory==="Tümü"?"Tüm içerikler":activeCategory==="Favoriler"?"Favorilerin":`${activeCategory} kategorisi`;
+$$(".filter-chip").forEach(b=>b.classList.toggle("selected",b.dataset.category===activeCategory));$("#statResources").textContent=String(resources.length).padStart(2,"0");const cats=new Set(resources.map(x=>x.category));const chips=$$(".filter-chip");const all=chips.find(b=>b.dataset.category==="Tümü");if(all)all.innerHTML=`Tümü <span>${resources.length}</span>`;const catsStat=$$(".hero-stats div")[1];if(catsStat)catsStat.querySelector("strong").textContent=String(cats.size).padStart(2,"0");}
+function saveResources(){putList(STORAGE.resources,resources);renderResources();}
+function openModal(id){$("#"+id).classList.remove("hidden");document.body.style.overflow="hidden"}
+function closeModal(id){$("#"+id).classList.add("hidden");if(!$$('.modal-backdrop:not(.hidden)').length)document.body.style.overflow=""}
+function setAuthMode(mode){authMode=mode;$$('[data-auth-tab]').forEach(t=>t.classList.toggle("active",t.dataset.authTab===mode));$("#authSubmit").textContent=mode==="login"?"Giriş yap ↗":"Hesap oluştur ↗";$("#authPassword").autocomplete=mode==="login"?"current-password":"new-password";$("#authMessage").textContent=""}
+function openAuth(){const session=getSession();if(session){if(confirm(`${session.email} hesabından çıkış yapılsın mı?`)){localStorage.removeItem(STORAGE.session);updateAccountButton();renderResources();toast("Oturum kapatıldı.")}return}$("#authMessage").textContent="";setAuthMode("login");openModal("loginModal")}
+function updateAccountButton(){const s=getSession();$("#loginOpen").textContent=s?"Çıkış yap":"Giriş yap";$("#profileOpen").title=s?"Profilim":"Giriş yapıp profilini aç";$("#statResources").textContent=String(resources.length).padStart(2,"0")}
+function renderAdmin(){const reviews=getReviews(),users=getList(STORAGE.users,[]),views=resources.reduce((n,r)=>n+Number(r.views||0),0),reviewCount=Object.values(reviews).reduce((n,a)=>n+a.length,0);$("#adminStats").innerHTML=`<div class="stat-tile"><strong>${resources.length}</strong><span>İçerik</span></div><div class="stat-tile"><strong>${views}</strong><span>Görüntülenme</span></div><div class="stat-tile"><strong>${users.length}</strong><span>Demo hesap</span></div><div class="stat-tile"><strong>${reviewCount}</strong><span>Değerlendirme</span></div>`;const host=$("#adminContent");host.innerHTML=resources.length?resources.map(item=>`<div class="admin-row"><div><strong>${escapeHTML(item.title)}</strong><small>${escapeHTML(item.game)} · ${escapeHTML(item.category)} · ${escapeHTML(item.author||"Topluluk")}</small></div><button class="delete-button" data-delete="${escapeHTML(item.id)}">Kaldır</button></div>`).join(""):'<p class="modal-subtitle">Henüz içerik yok.</p>'}
+function showProfile(author){const email=currentEmail(),profiles=getList(STORAGE.profiles,{});if(author&&author!==userLabel()&&author!==email){const owned=resources.filter(r=>r.author===author);$("#profileTitle").textContent=author;$("#profileContent").innerHTML=`<div class="profile-card"><div class="avatar">${escapeHTML(author.slice(0,1).toUpperCase())}</div><div><strong>${escapeHTML(author)}</strong><p>${owned.length} paylaşım · ${owned.reduce((n,r)=>n+Number(r.views||0),0)} görüntülenme</p></div></div><h3>Paylaşımları</h3>${owned.map(r=>`<div class="admin-row"><span>${escapeHTML(r.title)}</span><button class="resource-open" data-details="${escapeHTML(r.id)}">Aç ↗</button></div>`).join("")||'<p class="modal-subtitle">Henüz herkese açık paylaşımı yok.</p>'}`;$("#profileForm").classList.add("hidden");openModal("profileModal");return}if(!email){toast("Profilini açmak için giriş yap.");openAuth();return}const profile=profiles[email]||{name:email.split("@")[0],bio:""};$("#profileTitle").textContent="Profilim";$("#profileContent").innerHTML=`<div class="profile-card"><div class="avatar">${escapeHTML((profile.name||"P").slice(0,1).toUpperCase())}</div><div><strong>${escapeHTML(profile.name||userLabel())}</strong><p>${escapeHTML(email)} · ${resources.filter(r=>r.author===email||r.author===profile.name).length} paylaşım</p><span class="badge-pill">${resources.filter(r=>r.author===email||r.author===profile.name).length>=3?"✦ Aktif üretici":"◈ Topluluk üyesi"}</span></div></div><p>${escapeHTML(profile.bio||"Henüz profil açıklaması eklenmedi.")}</p>`;$("#profileName").value=profile.name||"";$("#profileBio").value=profile.bio||"";$("#profileForm").classList.remove("hidden");$("#profileMessage").textContent="";openModal("profileModal")}
+function renderNotifications(){const list=getList(STORAGE.notifications,[]);$("#notificationsContent").innerHTML=list.length?list.map(n=>`<div class="notification-item ${n.read?"":"unread"}"><strong>${escapeHTML(n.title)}</strong><p>${escapeHTML(n.body)}</p><small>${new Date(n.created).toLocaleString("tr-TR")}</small></div>`).join(""):'<p class="modal-subtitle">Şimdilik bildirim yok. Yeni paylaşım ve etkinlikler burada görünecek.</p>'}
+function detailResource(id){const item=resources.find(r=>r.id===id);if(!item)return;item.views=Number(item.views||0)+1;putList(STORAGE.resources,resources);const reviews=getReviews(),list=reviews[id]||[],email=currentEmail(),mine=list.find(r=>r.email===email);$("#detailContent").innerHTML=`<h2 id="detailTitle">${escapeHTML(item.title)}</h2><p class="modal-subtitle">${escapeHTML(item.game)} · ${escapeHTML(item.category)} · ${escapeHTML(item.author||"Topluluk")}</p><p>${escapeHTML(item.description)}</p><div class="detail-actions">${item.link?`<a class="button button-ghost" href="${escapeHTML(item.link)}" target="_blank" rel="noopener noreferrer">Bağlantıyı aç ↗</a>`:""}<button class="button button-ghost" id="copyCode">Kod kopyala ⧉</button><button class="button button-ghost" id="detailFavorite">${getList(STORAGE.favorites,{})[email]?.includes(id)?"♥ Favoride":"♡ Favori"}</button></div><label class="code-label">Kod içeriği<textarea id="codeEditor" class="code-editor" spellcheck="false" placeholder="Bu paylaşımda henüz kod yok.">${escapeHTML(item.code||"")}</textarea></label><div class="editor-actions"><span class="muted-small">Kod editörü · Salt okunur</span><button class="button button-primary" id="copyCodeBottom">Kodu kopyala</button></div><div class="review-box"><h3>Yorumlar ve puanlama</h3><div class="rating-summary">★ ${ratingFor(id)?ratingFor(id).toFixed(1):"Yeni"} <span>${list.length} değerlendirme</span></div>${email?`<form id="reviewForm"><label>Puanın<select id="reviewRating"><option value="5">★★★★★ — 5</option><option value="4">★★★★ — 4</option><option value="3">★★★ — 3</option><option value="2">★★ — 2</option><option value="1">★ — 1</option></select></label><label>Yorum<textarea id="reviewText" maxlength="300" rows="2" placeholder="Yapıcı bir yorum yaz..."></textarea></label><button class="button button-primary" type="submit">Değerlendirmeyi gönder</button></form>`:'<p class="muted-small">Yorum yapmak için giriş yap.</p>'}<div class="reviews-list">${list.map(r=>`<div class="review-item"><strong>${escapeHTML(r.name||r.email)}</strong><span>${"★".repeat(r.rating)}${"☆".repeat(5-r.rating)}</span><p>${escapeHTML(r.text||"Puan verdi.")}</p></div>`).join("")||'<p class="muted-small">İlk değerlendirmeyi sen yap.</p>'}</div></div>`;
+$("#detailContent").querySelectorAll("#copyCode,#copyCodeBottom").forEach(b=>b.addEventListener("click",()=>copyText(item.code||"",item.code?"Kod kopyalandı.":"Bu içerikte kod bulunmuyor.")));$("#detailFavorite").addEventListener("click",()=>toggleFavorite(id));const rf=$("#reviewForm");if(rf)rf.addEventListener("submit",e=>{e.preventDefault();const all=getReviews(),arr=all[id]||[],existing=arr.findIndex(r=>r.email===email),entry={email,name:userLabel(),rating:Number($("#reviewRating").value),text:$("#reviewText").value.trim(),created:Date.now()};if(existing>=0)arr[existing]=entry;else arr.unshift(entry);all[id]=arr;putList(STORAGE.reviews,all);addNotification("Değerlendirme kaydedildi",`“${item.title}” için puanın kaydedildi.`);toast("Değerlendirmen kaydedildi.");detailResource(id);renderResources()});openModal("detailModal");renderResources()}
+async function copyText(text,message){try{await navigator.clipboard.writeText(text);toast(message)}catch{const t=document.createElement("textarea");t.value=text;document.body.append(t);t.select();document.execCommand("copy");t.remove();toast(message)}}
+function toggleFavorite(id){const email=currentEmail();if(!email){toast("Favorilere eklemek için giriş yap.");openAuth();return}const f=getList(STORAGE.favorites,{});f[email]=f[email]||[];const had=f[email].includes(id);f[email]=had?f[email].filter(x=>x!==id):[...f[email],id];putList(STORAGE.favorites,f);renderResources();toast(had?"Favorilerden çıkarıldı.":"Favorilere eklendi.");const btn=$("#detailFavorite");if(btn)btn.textContent=had?"♡ Favori":"♥ Favoride"}
+// Modal and navigation controls
+$$('[data-close]').forEach(b=>b.addEventListener("click",()=>closeModal(b.dataset.close)));$$('.modal-backdrop').forEach(bg=>bg.addEventListener("click",e=>{if(e.target===bg)closeModal(bg.id)}));$("#loginOpen").addEventListener("click",openAuth);$("#profileOpen").addEventListener("click",()=>showProfile());$("#adminOpen").addEventListener("click",()=>{renderAdmin();openModal("adminModal")});$("#notificationsOpen").addEventListener("click",()=>{renderNotifications();openModal("notificationsModal")});$("#markNotificationsRead").addEventListener("click",()=>{putList(STORAGE.notifications,getList(STORAGE.notifications,[]).map(n=>({...n,read:true})));renderNotifications();updateNotificationDot();toast("Bildirimler okundu.")});
+["uploadOpen","heroUpload","bannerUpload"].forEach(id=>$("#"+id).addEventListener("click",()=>{if(!currentEmail()){toast("Paylaşım yapmak için önce giriş yap.");openAuth();return}$("#uploadMessage").textContent="";openModal("uploadModal")}));
+$("#themeToggle").addEventListener("click",()=>{document.body.classList.toggle("light");localStorage.setItem(STORAGE.theme,document.body.classList.contains("light")?"light":"dark")});if(localStorage.getItem(STORAGE.theme)==="light")document.body.classList.add("light");
+$("#searchInput").addEventListener("input",renderResources);$$(".filter-chip").forEach(b=>b.addEventListener("click",()=>{activeCategory=b.dataset.category;renderResources()}));$("#favoritesNav").addEventListener("click",()=>{activeCategory="Favoriler";renderResources()});$("#resetFilters").addEventListener("click",()=>{$("#searchInput").value="";activeCategory="Tümü";renderResources()});
+$("#mobileMenu").addEventListener("click",()=>{const nav=$(".desktop-nav"),open=nav.classList.toggle("mobile-open");nav.setAttribute("aria-expanded",String(open))});$$('[data-auth-tab]').forEach(t=>t.addEventListener("click",()=>setAuthMode(t.dataset.authTab)));
+$("#authForm").addEventListener("submit",e=>{e.preventDefault();const email=$("#authEmail").value.trim().toLowerCase(),password=$("#authPassword").value,users=getList(STORAGE.users,[]),message=$("#authMessage");if(password.length<6){message.textContent="Şifre en az 6 karakter olmalı.";return}if(authMode==="register"){if(users.some(u=>u.email===email)){message.textContent="Bu e-posta zaten kayıtlı.";return}users.push({email,password});putList(STORAGE.users,users);localStorage.setItem(STORAGE.session,JSON.stringify({email}));const profiles=getList(STORAGE.profiles,{});profiles[email]={name:email.split("@")[0],bio:""};putList(STORAGE.profiles,profiles);addNotification("KLAKZWEB'e hoş geldin!","Profilini düzenle ve ilk favorini kaydet.");message.textContent="Demo hesabın oluşturuldu."}else{const u=users.find(x=>x.email===email&&x.password===password);if(!u){message.textContent="E-posta veya şifre yanlış. Önce hesap oluşturmayı dene.";return}localStorage.setItem(STORAGE.session,JSON.stringify({email}));message.textContent="Giriş başarılı."}updateAccountButton();renderResources();setTimeout(()=>closeModal("loginModal"),500)});
+$("#uploadForm").addEventListener("submit",e=>{e.preventDefault();if(!currentEmail()){toast("Önce giriş yap.");return}const category=$("#resourceCategory").value,item={id:`user-${Date.now()}`,title:$("#resourceTitle").value.trim(),game:$("#resourceGame").value.trim(),category,description:$("#resourceDescription").value.trim(),link:$("#resourceLink").value.trim(),code:$("#resourceCode").value.trim(),author:userLabel(),symbol:category==="Mod"?"✦":category==="Araç"?"⌘":"↗",color:["#b6a0ff","#8bd7ff","#9df5c3","#f5a8d2"][Math.floor(Math.random()*4)],created:Date.now(),views:0};resources.unshift(item);saveResources();addNotification("Paylaşım eklendi",`“${item.title}” yerel demo arşivine eklendi.`);$("#uploadForm").reset();$("#uploadMessage").textContent="İçerik bu tarayıcıya eklendi.";toast("İçerik eklendi!");setTimeout(()=>closeModal("uploadModal"),600)});
+$("#resourceGrid").addEventListener("click",e=>{const fav=e.target.closest("[data-favorite]"),details=e.target.closest("[data-details]"),profile=e.target.closest("[data-profile]");if(fav)toggleFavorite(fav.dataset.favorite);else if(details)detailResource(details.dataset.details);else if(profile)showProfile(profile.dataset.profile)});
+$("#adminContent").addEventListener("click",e=>{const b=e.target.closest("[data-delete]");if(!b)return;const item=resources.find(r=>r.id===b.dataset.delete);if(!item||!confirm(`“${item.title}” içeriği bu tarayıcıdan kaldırılsın mı?`))return;resources=resources.filter(r=>r.id!==b.dataset.delete);saveResources();renderAdmin();toast("İçerik kaldırıldı.")});
+$("#profileForm").addEventListener("submit",e=>{e.preventDefault();const email=currentEmail();if(!email)return;const profiles=getList(STORAGE.profiles,{});profiles[email]={name:$("#profileName").value.trim()||email.split("@")[0],bio:$("#profileBio").value.trim()};putList(STORAGE.profiles,profiles);toast("Profil kaydedildi.");$("#profileMessage").textContent="Profil bu tarayıcıya kaydedildi.";showProfile();renderResources()});
+document.addEventListener("keydown",e=>{if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==="k"){e.preventDefault();$("#searchInput").focus()}if(e.key==="Escape")$$('.modal-backdrop:not(.hidden)').forEach(m=>closeModal(m.id));if(e.key==="F2"){e.preventDefault();renderAdmin();openModal("adminModal")}});
+$("#year").textContent=new Date().getFullYear();updateAccountButton();renderResources();updateNotificationDot();

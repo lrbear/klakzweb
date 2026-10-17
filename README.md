@@ -1,36 +1,22 @@
-# KLAKZWEB
+# KLAKZWEB — HTML / CSS / JavaScript
 
-KLAKZWEB, HTML + CSS + JavaScript ile hazırlanmış oyun kaynakları/topluluk arşivi başlangıç projesidir. Next.js, TypeScript, Tailwind CSS veya npm bağımlılığı kullanmaz.
+## Çalıştırma
+- `index.html` dosyasını tarayıcıda açabilir veya klasörü GitHub deposuna yükleyip Vercel'de statik site olarak dağıtabilirsin.
+- Build komutu gerekmez. Framework, TypeScript veya Tailwind kullanılmıyor.
 
-## Özellikler
-- İçerik arama (Ctrl+K / Cmd+K)
-- Kategori filtreleri
-- Açık/koyu tema ve tercihi tarayıcıda saklama
-- Demo kayıt/giriş arayüzü
-- İçerik ekleme formu
-- Yönetim prototipi (F2 ile açılır)
-- Mobil uyumlu arayüz
-- GitHub ve Vercel için statik dosya yapısı
+## Çalışan demo özellikleri
+- Arama, kategori filtreleri ve favori filtresi
+- Karanlık/açık tema, mobil menü ve animasyonlar
+- Yerel demo kayıt/giriş, kullanıcı profili ve rozet
+- İçerik paylaşma, kod editörü ve kod kopyalama
+- Yorum ve 1–5 puanlama
+- Bildirimler ve yerel istatistikler
+- Yönetim panelinde demo içerik kaldırma
 
-## Yerelde çalıştırma
-`index.html` dosyasını tarayıcıda açabilirsin. Daha iyi bir yerel geliştirme deneyimi için VS Code'da Live Server gibi basit bir statik sunucu kullanabilirsin. Kurulum veya build komutu gerekmez.
+## Önemli sınırlama
+Bu klasör tek başına gerçek çok kullanıcılı veritabanı veya güvenli kimlik doğrulama sağlayamaz. Demo verileri aynı tarayıcının `localStorage` alanında tutulur; farklı cihazlara eşitlenmez. Demo girişinde parolalar gerçek üretim güvenliğinde saklanmaz. Bu sürümü gerçek kullanıcı hesapları için tek başına kullanma.
 
-## GitHub'a yükleme
-1. ZIP'i aç.
-2. Dosyaları kendi GitHub deponun kök dizinine yükle.
-3. `index.html`, `styles.css`, `app.js`, `favicon.svg` ve `vercel.json` aynı kökte olmalı.
+## Gerçek veritabanına geçiş hazırlığı
+`schema.sql`, Supabase için başlangıç tabloları ve Row Level Security (RLS) politikalarını içerir. Supabase projesi oluşturup SQL'i gözden geçirerek çalıştırmalı, Auth e-posta girişini etkinleştirmeli ve `supabase-config.js` dosyasına yalnızca proje URL'si ile public anon/publishable anahtarını koymalısın. Service-role anahtarını asla tarayıcıya koyma.
 
-## Vercel'e dağıtım
-1. Vercel hesabında **Add New → Project** seç.
-2. GitHub deposunu içe aktar.
-3. Framework preset olarak **Other** seçilebilir.
-4. Build command ve output directory gerekmiyor; `index.html` kök dizindedir.
-5. Deploy düğmesine bas.
-
-`vercel.json` statik sitenin `index.html` dosyasını varsayılan sayfa olarak kullanmasını sağlar.
-
-## Önemli: prototip ve gerçek servis ayrımı
-Bu sürüm, arayüz ve tarayıcı içi etkileşim prototipidir. İçerikler, demo kullanıcıları ve tema tercihi `localStorage` içinde yalnızca mevcut tarayıcıda tutulur; cihazlar arasında paylaşılmaz. Demo şifreleri güvenli bir kimlik doğrulama sistemi değildir. Gerçek kullanıcı hesapları, sunucuya dosya yükleme, moderatör/admin yetkileri ve kalıcı ortak içerik için sunucu tarafı yetkilendirme ve bir backend (ör. Supabase/Firebase) bağlanmalıdır. Yönetim penceresi `F2` ile açılır; gerçek erişim kontrolü sağlamaz.
-
-## Güvenlik notu
-Herkese açık projede hassas bilgi veya API anahtarı koyma. İleride bir backend bağlarken yetkileri istemci koduna güvenerek verme.
+Not: Bu sürümün arayüz işlevleri yerel demo olarak çalışır; Supabase bağlantısı bu pakette henüz canlı veritabanı işlemlerine bağlanmış değildir. Gerçek veritabanı entegrasyonu ayrı bir adım gerektirir. Yönetim yetkisi mutlaka veritabanı RLS veya güvenilir sunucu tarafında doğrulanmalıdır.
